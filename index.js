@@ -1,13 +1,15 @@
 import "dotenv/config";
 import express from "express";
 import sales from "./data/sales.json" assert { type: "json" };
+import multer from "multer";
 
+const upload = multer({ dest: "tmp_uploads/" });
 const app = express();
 
 app.set("view engine", "ejs");
 
 // top-level middlewares
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 // 定義路由
@@ -33,6 +35,10 @@ app.get("/try-post-form", (req, res) => {
 });
 app.post("/try-post-form", (req, res) => {
   res.render("try-post-form", req.body);
+});
+
+app.post("/try-upload", upload.single("avatar"), (req, res) => {
+  res.json(req.file);
 });
 
 // 設定靜態內容的資料夾
