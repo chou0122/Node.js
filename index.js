@@ -1,9 +1,11 @@
-import "dotenv/config";
+
+
+// import "dotenv/config";
 import express from "express";
 import sales from "./data/sales.json" assert { type: "json" };
-import multer from "multer";
-
-const upload = multer({ dest: "tmp_uploads/" });
+// import multer from "multer";
+// const upload = multer({ dest: "tmp_uploads/" });
+import upload from "./utils/upload-imgs.js";
 const app = express();
 
 app.set("view engine", "ejs");
@@ -14,7 +16,7 @@ app.use(express.json());
 
 // 定義路由
 app.get("/", (req, res) => {
-  res.render("home", { name: "Shinder" });
+  res.render("home", { name: process.env.DB_NAME });
 });
 
 app.get("/json-sales", (req, res) => {
