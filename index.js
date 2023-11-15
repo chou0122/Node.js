@@ -6,6 +6,10 @@ const app = express();
 
 app.set("view engine", "ejs");
 
+// top-level middlewares
+app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
+
 // 定義路由
 app.get("/", (req, res) => {
   res.render("home", { name: "Shinder" });
@@ -19,10 +23,16 @@ app.get("/try-qs", (req, res) => {
   res.json(req.query);
 });
 
-const urlencodedParser = express.urlencoded({extended: false})
-app.post("/try-post", [urlencodedParser], (req, res) => {
-  console.log('req.body:', req.body)
+app.post("/try-post", (req, res) => {
+  console.log("req.body:", req.body);
   res.json(req.body);
+});
+
+app.get("/try-post-form", (req, res) => {
+  res.render("try-post-form");
+});
+app.post("/try-post-form", (req, res) => {
+  res.render("try-post-form", req.body);
 });
 
 // 設定靜態內容的資料夾
