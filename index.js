@@ -7,8 +7,10 @@ import sales from "./data/sales.json" assert { type: "json" };
 // import multer from "multer";
 // const upload = multer({ dest: "tmp_uploads/" });
 import upload from "./utils/upload-imgs.js";
+import db from "./utils/connect-mysql.js";
 
 import admin2Router from "./routes/admin2.js";
+import addressBookRouter from "./routes/address-book.js";
 const app = express();
 
 app.set("view engine", "ejs");
@@ -82,6 +84,7 @@ app.get(/^\/m\/09\d{2}-?\d{3}-?\d{3}$/i, (req, res) => {
 });
 
 app.use("/admins", admin2Router);
+app.use("/address-book", addressBookRouter);
 app.get("/try-sess", (req, res) => {
   req.session.n = req.session.n || 0;
   req.session.n++;
@@ -108,6 +111,13 @@ app.get("/try-moment", (req, res) => {
     a1,
     a2,
   });
+});
+
+app.get("/try-db", async (req, res) => {
+  const [results, fields] = await db.query(
+    `SELECT * FROM \`categories\` LIMIT 5`
+  );
+  res.json(results);
 });
 
 // 設定靜態內容的資料夾
