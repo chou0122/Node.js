@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="http://localhost:3002/bootstrap/css/bootstrap.min.css" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
@@ -65,8 +65,9 @@
       </div>
     </div>
 
-    <script src="/jquery/jquery.min.js"></script>
-    <script src="/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="http://localhost:3002/jquery/jquery.min.js"></script>
+    <script src="http://localhost:3002/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.10/dayjs.min.js"></script>
     <script>
       const tbody = document.querySelector("tbody");
       const pagination = document.querySelector(".pagination");
@@ -74,7 +75,8 @@
         if (i >= 1 && i <= totalPages) {
           return `
             <li class="page-item ${i === page ? "active" : ""}">
-              <a class="page-link" href="?page=${i}">${i}</a>
+              <a class="page-link" href="?page=${i}" 
+              onclick="gotoPage(event, ${i})">${i}</a>
             </li>`;
         } else {
           return "";
@@ -87,26 +89,44 @@
           <td>${name}</td>
           <td>${email}</td>
           <td>${mobile}</td>
-          <td>${birthday}</td>
+          <td>${dayjs(birthday).format("YYYY-MM-DD")}</td>
           <td>${address}</td>
         </tr>
         `;
       };
 
-      fetch(`/address-book/api`+location.search)
-        .then((r) => r.json())
-        .then((data) => {
-          console.log(data);
-          const { page, totalPages } = data;
-          let str = "";
-          for (let i = page - 5; i <= page + 5; i++) {
-            str += pagiItem({ i, page, totalPages });
-          }
-          pagination.innerHTML = str;
+      const gotoPage = (event, p) => {
+        event.preventDefault(); // 不要觸發 a tag href
 
-          tbody.innerHTML = data.rows.map((row) => tableRow(row)).join("");
-        })
-        .catch((ex) => console.log(ex));
+        history.pushState(null, null, `?page=${p}`);
+        renderPage(`?page=${p}`);
+        console.log({ p });
+      };
+
+      function renderPage(qs) {
+        fetch(`http://localhost:3002/address-book/api` + qs)
+          .then((r) => r.json())
+          .then((data) => {
+            console.log(data);
+            const { page, totalPages } = data;
+
+            pagination.innerHTML = Array(11)
+              .fill(1)
+              .map((v, index) =>
+                pagiItem({ i: page - 5 + index, page, totalPages })
+              )
+              .join("");
+
+            tbody.innerHTML = data.rows.map((row) => tableRow(row)).join("");
+          })
+          .catch((ex) => console.log(ex));
+      }
+      renderPage(location.search);
+      
+
+      window.addEventListener("popstate", event=>{
+        renderPage(location.search);
+      });
     </script>
   </body>
 </html>
