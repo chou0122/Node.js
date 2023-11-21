@@ -66,24 +66,48 @@ router.get("/add", async (req, res) => {
   res.render("address-book/add");
 });
 router.post("/add", upload.none(), async (req, res) => {
+  const output = {
+    success: false,
+    postData: req.body, // 除錯用
+  };
 
-  const {name, email, mobile, birthday, address} = req.body;
-  const sql = "INSERT INTO `address_book`(`name`, `email`, `mobile`, `birthday`, `address`, `created_at`) VALUES (?, ?, ?, ?, ?, NOW() )";
+  const { name, email, mobile, birthday, address } = req.body;
+  const sql =
+    "INSERT INTO `address_book`(`name`, `email`, `mobile`, `birthday`, `address`, `created_at`) VALUES (?, ?, ?, ?, ?, NOW() )";
 
-  const [result] = await db.query(sql, [name, email, mobile, birthday, address]);
+  try {
+    const [result] = await db.query(sql, [
+      name,
+      email,
+      mobile,
+      birthday,
+      address,
+    ]);
+    output.result = result;
+    output.success = !! result.affectedRows;
+
+  } catch (ex) {
+    output.exception = ex;
+  }
 
   /*
-  {
-    "fieldCount": 0,
-    "affectedRows": 1,  # 影響的列數
-    "insertId": 1021,   # 取得的 PK 
-    "info": "",
-    "serverStatus": 2,
-    "warningStatus": 0,
-    "changedRows": 0    # 修改時真正有變動的資料筆數
-  }
+  const sql = "INSERT INTO `address_book` SET ?";
+  // INSERT INTO `address_book` SET `name`='abc',
+  req.body.created_at = new Date();
+  const [result] = await db.query(sql, [req.body]);
   */
-  res.json(result);
+
+  // {
+  //   "fieldCount": 0,
+  //   "affectedRows": 1,  # 影響的列數
+  //   "insertId": 1021,   # 取得的 PK
+  //   "info": "",
+  //   "serverStatus": 2,
+  //   "warningStatus": 0,
+  //   "changedRows": 0    # 修改時真正有變動的資料筆數
+  // }
+
+  res.json(output);
 });
 
 export default router;
