@@ -2,97 +2,93 @@
 <!-- <%- JSON.stringify(locals, null, 4) %> -->
 <div class="container">
   <div class="row">
-    <div class="col">
-      <nav aria-label="Page navigation example">
-        <ul class="pagination">
-          <li class="page-item <%= page===1 ? 'disabled' : '' %>">
-            <a class="page-link" href="?page=1">
-              <i class="fa-solid fa-angles-left"></i>
-            </a>
-          </li>
-          <li class="page-item <%= page===1 ? 'disabled' : '' %>">
-            <a class="page-link" href="?page=<%= page -1 %>">
-              <i class="fa-solid fa-angle-left"></i>
-            </a>
-          </li>
-          <% for(let i=page-5; i<=page+5; i++) if(i>=1 && i<=totalPages) { %>
-          <li class="page-item <%= i===page ? 'active' : '' %>">
-            <a class="page-link" href="?page=<%= i %>"><%= i %></a>
-          </li>
-          <% } %>
-          <li class="page-item <%= page===totalPages ? 'disabled' : '' %>">
-            <a class="page-link" href="?page=<%= page +1 %>">
-              <i class="fa-solid fa-angle-right"></i>
-            </a>
-          </li>
-          <li class="page-item <%= page===totalPages ? 'disabled' : '' %>">
-            <a class="page-link" href="?page=<%= totalPages %>">
-              <i class="fa-solid fa-angles-right"></i>
-            </a>
-          </li>
-        </ul>
-      </nav>
-    </div>
-  </div>
-  <div class="row">
-    <div class="col">
-      <table class="table table-striped table-bordered">
-        <thead>
-          <tr>
-            <th><i class="fa-solid fa-trash"></i></th>
-            <th>編號</th>
-            <th>姓名</th>
-            <th>email</th>
-            <th>手機</th>
-            <th>生日</th>
-            <th>地址</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% for(let i of rows) { %>
-          <tr>
-            <td>
-              <a
-                href="javascript:"
-                onclick="removeItem(event)"
-                data-sid="<%= i.sid %>"
-              >
-                <i class="fa-solid fa-trash"></i>
-              </a>
-            </td>
-            <td><%= i.sid %></td>
-            <td><%= i.name %></td>
-            <td><%= i.email %></td>
-            <td><%= i.mobile %></td>
-            <td><%= toDateString(i.birthday) %></td>
-            <td><%= i.address %></td>
-          </tr>
-          <% } %>
-        </tbody>
-      </table>
+    <div class="col-6">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">新增資料</h5>
+          <form name="form1" onsubmit="sendForm(event)">
+
+            <div class="mb-3">
+              <label for="name" class="form-label">name</label>
+              <input type="text" class="form-control" id="name" name="name" />
+              <div class="form-text"></div>
+            </div>
+            <div class="mb-3">
+              <label for="email" class="form-label">email</label>
+              <input type="text" class="form-control" id="email" name="email" />
+              <div class="form-text"></div>
+            </div>
+            <div class="mb-3">
+              <label for="mobile" class="form-label">mobile</label>
+              <input
+                type="text"
+                class="form-control"
+                id="mobile"
+                name="mobile"
+              />
+              <div class="form-text"></div>
+            </div>
+            <div class="mb-3">
+              <label for="birthday" class="form-label">birthday</label>
+              <input
+                type="date"
+                class="form-control"
+                id="birthday"
+                name="birthday"
+              />
+              <div class="form-text"></div>
+            </div>
+            <div class="mb-3">
+              <label for="address" class="form-label">address</label>
+              <textarea
+                class="form-control"
+                id="address"
+                name="address"
+                cols="30"
+                rows="3"
+              ></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Submit</button>
+          </form>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
 <%- include('../parts/scripts') %>
 <script>
-  const removeItem = (e) => {
+  function sendForm(e) {
     e.preventDefault();
-    const sid = e.currentTarget.getAttribute("data-sid");
+    // TODO: 資料檢查
 
-    // TODO: 詢問用戶是否確定要刪除
+    const fd = new FormData(document.form1);
+    const usp = new URLSearchParams(fd);
+    const dataObj = Object.fromEntries(fd);
 
-    fetch(`/address-book/${sid}`, {
-      method: "DELETE",
+    fetch(``, {
+      method: "POST",
+      body: fd, // 1. multipart/form-data, 後端需要 middleware (upload.none())
+
+      /*
+      body: usp.toString(), // 2. application/x-www-form-urlencoded
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      */
+      /*
+      body: JSON.stringify(dataObj), // 3. application/json
+      headers: {
+        "Content-Type": "application/json",
+      },
+      */
     })
       .then((r) => r.json())
       .then((data) => {
         console.log(data);
-        if(data.success){
-          location.reload();
-        }
       })
       .catch((ex) => console.log(ex));
-  };
+  }
 </script>
 <%- include('../parts/html-foot') %>

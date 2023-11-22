@@ -1,8 +1,22 @@
 import express from "express";
 import db from "./../utils/connect-mysql.js";
 import upload from "./../utils/upload-imgs.js";
+import dayjs from "dayjs";
 
 const router = express.Router();
+
+router.use((req, res, next) => {
+  const u = req.url.split("?")[0]; // 只要路徑
+  console.log({ u });
+  if (req.method === "GET" && u === "/") {
+    return next();
+  }
+
+  if (!req.session.admin) {
+    return res.redirect("/login");
+  }
+  next();
+});
 
 const getListData = async (req) => {
   const perPage = 20; // 每頁幾筆
@@ -50,12 +64,17 @@ const getListData = async (req) => {
 
 router.get("/", async (req, res) => {
   res.locals.pageName = "ab-list";
+  res.locals.title = "列表 | " + res.locals.title;
   const output = await getListData(req);
   if (output.redirect) {
     return res.redirect(output.redirect);
   }
 
-  res.render("address-book/list", output);
+  if (!req.session.admin) {
+    res.render("address-book/list-no-admin", output);
+  } else {
+    res.render("address-book/list", output);
+  }
 });
 
 router.get("/api", async (req, res) => {
@@ -84,8 +103,7 @@ router.post("/add", upload.none(), async (req, res) => {
       address,
     ]);
     output.result = result;
-    output.success = !! result.affectedRows;
-
+    output.success = !!result.affectedRows;
   } catch (ex) {
     output.exception = ex;
   }
@@ -110,4 +128,51 @@ router.post("/add", upload.none(), async (req, res) => {
   res.json(output);
 });
 
+router.get("/edit/:sid", async (req, res) => {
+  const sid = +req.params.sid;
+  res.locals.title = "編輯 | " + res.locals.title;
+
+  const sql = `SELECT * FROM address_book WHERE sid=?`;
+  const [rows] = await db.query(sql, [sid]);
+  if (!rows.length) {
+    return res.redirect(req.baseUrl);
+  }
+  const row = rows[0];
+  row.birthday2 = dayjs(row.birthday).format("YYYY-MM-DD");
+
+  res.render("address-book/edit", row);
+});
+
+router.put("/edit/:sid", async (req, res) => {
+  const output = {
+    success: false,
+    postData: req.body,
+    result: null,
+  };
+  // TODO: 表單資料檢查
+  req.body.address = req.body.address.trim(); // 去除頭尾空白
+  const sql = `UPDATE address_book SET ? WHERE sid=?`;
+  const [result] = await db.query(sql, [req.body, req.body.sid]);
+  output.result = result;
+  output.success = !!result.changedRows;
+
+  res.json(output);
+});
+
+router.delete("/:sid", async (req, res) => {
+  const output = {
+    success: false,
+    result: null,
+  };
+  const sid = +req.params.sid;
+  if (!sid || sid < 1) {
+    return res.json(output);
+  }
+
+  const sql = ` DELETE FROM address_book WHERE sid=${sid}`;
+  const [result] = await db.query(sql);
+  output.result = result;
+  output.success = !!result.affectedRows;
+  res.json(output);
+});
 export default router;
