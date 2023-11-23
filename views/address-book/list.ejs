@@ -1,7 +1,41 @@
 <%- include('../parts/html-head') %> <%- include('../parts/navbar') %>
-<!-- <%- JSON.stringify(locals, null, 4) %> -->
 
 <div class="container">
+  <div class="row">
+    <div class="col-6">
+      <form name="searchForm" class="d-flex" role="search">
+        <input
+          class="form-control me-2"
+          type="search"
+          name="keyword"
+          value="<%= qs.keyword ?? '' %>"
+          placeholder="Search"
+          aria-label="Search"
+        />
+        <input
+          type="hidden"
+          name="startDate"
+          value="<%= qs.startDate ?? '' %>"
+        />
+        <input type="hidden" name="endDate" value="<%= qs.endDate ?? '' %>" />
+        <button class="btn btn-outline-success" type="submit">Search</button>
+      </form>
+    </div>
+    <div class="col-6">
+      <select
+        class="form-control"
+        id="selectDateRange"
+        onchange="dateRangeChange(event)"
+      >
+        <option value="">全部</option>
+        <option value="1">1985 ~ 1987</option>
+        <option value="2">1988 ~ 1990</option>
+        <option value="3">1991 ~ 1993</option>
+        <option value="4">1994 ~ 1996</option>
+        <option value="5">1997 ~ 1999</option>
+      </select>
+    </div>
+  </div>
   <div class="row">
     <div class="col">
       <nav aria-label="Page navigation example">
@@ -18,7 +52,11 @@
           </li>
           <% for(let i=page-5; i<=page+5; i++) if(i>=1 && i<=totalPages) { %>
           <li class="page-item <%= i===page ? 'active' : '' %>">
-            <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+            <a
+              class="page-link"
+              href="?<%= new URLSearchParams({...qs, page: i}).toString() %>"
+              ><%= i %></a
+            >
           </li>
           <% } %>
           <li class="page-item <%= page===totalPages ? 'disabled' : '' %>">
@@ -117,6 +155,10 @@
 
 <%- include('../parts/scripts') %>
 <script>
+  const startDateFiled = document.searchForm.startDate;
+  const endDateFiled = document.searchForm.endDate;
+  const selectDateRange = document.querySelector("#selectDateRange");
+
   const removeItem = (e) => {
     e.preventDefault();
     const sid = e.currentTarget.getAttribute("data-sid");
@@ -139,5 +181,66 @@
   const myModal = new bootstrap.Modal("#exampleModal", {
     keyboard: false,
   });
+
+  function dateRangeChange(event) {
+    const t = event.currentTarget;
+    switch (t.value) {
+      case "1":
+        startDateFiled.value = "1985-01-01";
+        endDateFiled.value = "1987-12-31";
+        break;
+      case "2":
+        startDateFiled.value = "1988-01-01";
+        endDateFiled.value = "1990-12-31";
+        break;
+      case "3":
+        startDateFiled.value = "1991-01-01";
+        endDateFiled.value = "1993-12-31";
+        break;
+      case "4":
+        startDateFiled.value = "1994-01-01";
+        endDateFiled.value = "1996-12-31";
+        break;
+      case "5":
+        startDateFiled.value = "1997-01-01";
+        endDateFiled.value = "1999-12-31";
+        break;
+      default:
+        startDateFiled.value = "";
+        endDateFiled.value = "";
+        break;
+    }
+    document.searchForm.submit(); // 直接做表單的送出
+  }
+
+  // combobox init
+  if (
+    startDateFiled.value === "1985-01-01" &&
+    endDateFiled.value === "1987-12-31"
+  ) {
+    selectDateRange.value = 1;
+  } else if (
+    startDateFiled.value === "1988-01-01" &&
+    endDateFiled.value === "1990-12-31"
+  ) {
+    selectDateRange.value = 2;
+  } else if (
+    startDateFiled.value === "1991-01-01" &&
+    endDateFiled.value === "1993-12-31"
+  ) {
+    selectDateRange.value = 3;
+  } else if (
+    startDateFiled.value === "1994-01-01" &&
+    endDateFiled.value === "1996-12-31"
+  ) {
+    selectDateRange.value = 4;
+  } else if (
+    startDateFiled.value === "1997-01-01" &&
+    endDateFiled.value === "1999-12-31"
+  ) {
+    selectDateRange.value = 5;
+  } else {
+    selectDateRange.value = "";
+  }
 </script>
 <%- include('../parts/html-foot') %>

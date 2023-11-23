@@ -21,14 +21,41 @@ router.use((req, res, next) => {
 const getListData = async (req) => {
   const perPage = 20; // 每頁幾筆
   let page = +req.query.page || 1; // 用戶決定要看第幾頁
-  let keyword = req.query.keyword ? req.query.keyword.trim() : '';
+  let keyword = (req.query.keyword && typeof req.query.keyword ==='string' ) ? req.query.keyword.trim() : "";
   let keyword_ = db.escape(`%${keyword}%`);
 
-  let where = ` WHERE 1 `;
-  if(keyword){
-    where += ` AND \`name\` LIKE ${keyword_} `;
+  let qs = {};  // 用來把 query string 的設定傳給 template
+  // 起始的日期
+  let startDate = req.query.startDate ? req.query.startDate.trim() : "";
+  const startDateD = dayjs(startDate);
+  if (startDateD.isValid()) {
+    startDate = startDateD.format("YYYY-MM-DD");
+  } else {
+    startDate = "";
   }
 
+  // 結束的日期
+  let endDate = req.query.endDate ? req.query.endDate.trim() : "";
+  const endDateD = dayjs(endDate);
+  if (endDateD.isValid()) {
+    endDate = endDateD.format("YYYY-MM-DD");
+  } else {
+    endDate = "";
+  }
+
+  let where = ` WHERE 1 `;
+  if (keyword) {
+    qs.keyword = keyword;
+    where += ` AND ( \`name\` LIKE ${keyword_} OR \`mobile\` LIKE ${keyword_} ) `;
+  }
+  if (startDate) {
+    qs.startDate = startDate;
+    where += ` AND birthday >= '${startDate}' `;
+  }
+  if (endDate) {
+    qs.endDate = endDate;
+    where += ` AND birthday <= '${endDate}' `;
+  }
 
   let totalRows = 0;
   let totalPages = 0;
@@ -41,7 +68,7 @@ const getListData = async (req) => {
     rows,
     totalRows,
     totalPages,
-
+    qs,
     redirect: "",
     info: "",
   };
