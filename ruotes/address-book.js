@@ -20,7 +20,16 @@ router.use((req, res, next) => {
 
 const getListData = async (req) => {
   const perPage = 20; // 每頁幾筆
-  let page = +req.query.page || 1;
+  let page = +req.query.page || 1; // 用戶決定要看第幾頁
+  let keyword = req.query.keyword ? req.query.keyword.trim() : '';
+  let keyword_ = db.escape(`%${keyword}%`);
+
+  let where = ` WHERE 1 `;
+  if(keyword){
+    where += ` AND \`name\` LIKE ${keyword_} `;
+  }
+
+
   let totalRows = 0;
   let totalPages = 0;
   let rows = [];
@@ -43,7 +52,7 @@ const getListData = async (req) => {
     return output;
   }
 
-  const t_sql = "SELECT COUNT(1) totalRows FROM address_book";
+  const t_sql = `SELECT COUNT(1) totalRows FROM address_book ${where}`;
   [[{ totalRows }]] = await db.query(t_sql);
   totalPages = Math.ceil(totalRows / perPage);
   if (totalRows > 0) {
@@ -53,7 +62,7 @@ const getListData = async (req) => {
       return { ...output, totalRows, totalPages };
     }
 
-    const sql = `SELECT * FROM address_book ORDER BY sid DESC 
+    const sql = `SELECT * FROM address_book ${where} ORDER BY sid DESC 
     LIMIT ${(page - 1) * perPage}, ${perPage}`;
     [rows] = await db.query(sql);
     output = { ...output, success: true, rows, totalRows, totalPages };
